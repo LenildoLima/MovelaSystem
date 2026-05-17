@@ -35,13 +35,14 @@ import { Plus, Eye, CheckCircle2, Factory, XCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export function Ordens() {
-  const { ordens, isLoading, createOrdem, updateStatusOrdem, addMaoObra, getDetalhesOrdem } = useOrdens()
+  const { ordens, isLoading, createOrdem, updateStatusOrdem, cancelOrdem, addMaoObra, getDetalhesOrdem } = useOrdens()
   const { produtos } = useProdutos()
   const { clientes } = useClientes()
   
   const [selectedOrdemId, setSelectedOrdemId] = useState<string | null>(null)
   const [isNewOrdemOpen, setIsNewOrdemOpen] = useState(false)
   const [isAddMaoObraOpen, setIsAddMaoObraOpen] = useState(false)
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
   
   const { data: detalhes } = getDetalhesOrdem(selectedOrdemId || '')
 
@@ -286,13 +287,15 @@ export function Ordens() {
                     >
                       <CheckCircle2 className="mr-2 h-4 w-4" /> Concluir Ordem
                     </Button>
-                    <Button 
-                      variant="destructive"
-                      className="font-bold flex-1 h-10 shadow-lg shadow-rose-900/20"
-                      onClick={() => updateStatusOrdem.mutate({ id: selectedOrdem.id, status: 'cancelado' })}
-                    >
-                      <XCircle className="mr-2 h-4 w-4" /> Cancelar Ordem
-                    </Button>
+                    {((detalhes?.ordem?.status || selectedOrdem?.status) === 'pendente' || (detalhes?.ordem?.status || selectedOrdem?.status) === 'em_producao') && (
+                      <Button 
+                        variant="destructive"
+                        className="font-bold flex-1 h-10 shadow-lg shadow-rose-900/20"
+                        onClick={() => setIsCancelDialogOpen(true)}
+                      >
+                        <XCircle className="mr-2 h-4 w-4" /> Cancelar Ordem
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -404,6 +407,83 @@ export function Ordens() {
           </div>
           <DialogFooter>
             <Button onClick={handleAddMaoObra} className="bg-amber-500">Confirmar e Recalcular Lucro</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-2xl p-8">
+          <DialogHeader>
+            <DialogTitle className="text-2xl text-rose-500 font-bold">Cancelar Ordem de Produção</DialogTitle>
+            <DialogDescription className="text-zinc-400 py-6 text-lg leading-relaxed">
+              {(detalhes?.ordem?.status || selectedOrdem?.status) === 'pendente' 
+                ? "Deseja cancelar esta ordem? Os materiais serão devolvidos ao estoque automaticamente."
+                : "A produção já foi iniciada. Os materiais reservados devem ser devolvidos ao estoque?"
+              }
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-row gap-6 mt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsCancelDialogOpen(false)} 
+              className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 px-6 h-11"
+            >
+              Voltar
+            </Button>
+            
+            {(detalhes?.ordem?.status || selectedOrdem?.status) === 'pendente' ? (
+              <Button 
+                variant="destructive" 
+                className="bg-rose-600 hover:bg-rose-700 font-bold px-8 h-11"
+                onClick={() => {
+                  if (selectedOrdem) {
+                    cancelOrdem.mutate({ id: selectedOrdem.id, devolverEstoque: true }, {
+                      onSuccess: () => {
+                        setIsCancelDialogOpen(false)
+                        setSelectedOrdemId(null)
+                      }
+                    })
+                  }
+                }}
+              >
+                Confirmar Cancelamento
+              </Button>
+            ) : (
+              <div className="flex gap-4 w-full justify-end">
+                <Button 
+                  variant="outline" 
+                  className="border-rose-500 text-rose-500 hover:bg-rose-500/10 font-bold px-6 h-11"
+                  onClick={() => {
+                    if (selectedOrdem) {
+                      cancelOrdem.mutate({ id: selectedOrdem.id, devolverEstoque: false }, {
+                        onSuccess: () => {
+                          setIsCancelDialogOpen(false)
+                          setSelectedOrdemId(null)
+                        }
+                      })
+                    }
+                  }}
+                >
+                  Cancelar sem Devolver Estoque
+                </Button>
+                <Button 
+                  variant="destructive"
+                  className="bg-rose-600 hover:bg-rose-700 font-bold px-6 h-11"
+                  onClick={() => {
+                    if (selectedOrdem) {
+                      cancelOrdem.mutate({ id: selectedOrdem.id, devolverEstoque: true }, {
+                        onSuccess: () => {
+                          setIsCancelDialogOpen(false)
+                          setSelectedOrdemId(null)
+                        }
+                      })
+                    }
+                  }}
+                >
+                  Cancelar e Devolver Estoque
+                </Button>
+              </div>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -117,8 +117,9 @@ export function useOrdens() {
       if (error) throw error
       return data[0]
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['ordens'] })
+      queryClient.invalidateQueries({ queryKey: ['ordem-detalhes', variables.id] })
       toast({
         title: 'Sucesso',
         description: 'Status da ordem atualizado!',
@@ -145,15 +146,55 @@ export function useOrdens() {
     },
   })
 
+  const cancelOrdem = useMutation({
+    mutationFn: async ({ id, devolverEstoque }: { id: string; devolverEstoque: boolean }) => {
+      if (!devolverEstoque) {
+        // Deleta os registros de materiais usados para que o trigger não faça o estorno
+        const { error: deleteError } = await supabase
+          .from('ordem_materiais_usados')
+          .delete()
+          .eq('ordem_id', id)
+        
+        if (deleteError) throw deleteError
+      }
+
+      const { data, error } = await supabase
+        .from('ordens_producao')
+        .update({ status: 'cancelado' })
+        .eq('id', id)
+        .select()
+      
+      if (error) throw error
+      return data[0]
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ordens'] })
+      queryClient.invalidateQueries({ queryKey: ['materiais'] })
+      toast({
+        title: 'Sucesso',
+        description: 'Ordem cancelada com sucesso!',
+      })
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Erro ao cancelar ordem',
+        description: error.message,
+        variant: 'destructive',
+      })
+    }
+  })
+
   const getDetalhesOrdem = (ordemId: string) => {
     return useQuery({
       queryKey: ['ordem-detalhes', ordemId],
       queryFn: async () => {
-        const [materiais, maoObra] = await Promise.all([
+        const [ordem, materiais, maoObra] = await Promise.all([
+          supabase.from('ordens_producao').select('*, produto:produtos(*), cliente:clientes(*)').eq('id', ordemId).single(),
           supabase.from('ordem_materiais_usados').select('*, materiais(*)').eq('ordem_id', ordemId),
           supabase.from('ordem_mao_obra').select('*').eq('ordem_id', ordemId)
         ])
         return {
+          ordem: ordem.data as OrdemProducao,
           materiais: materiais.data || [],
           maoObra: maoObra.data || []
         }
@@ -169,6 +210,7 @@ export function useOrdens() {
     error: ordensQuery.error,
     createOrdem,
     updateStatusOrdem,
+    cancelOrdem,
     addMaoObra,
     getDetalhesOrdem
   }
