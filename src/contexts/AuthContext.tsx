@@ -82,25 +82,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  async function fetchPerfil(userId: string) {
-    try {
-      const { data, error } = await supabase
-        .from('usuarios')
-        .select('*')
-        .eq('id', userId)
-        .single()
-
-      if (error) {
-        console.error('Erro ao buscar perfil:', error)
-        return null
-      }
-      setPerfil(data)
-      return data
-    } catch (error) {
-      console.error('Erro ao buscar perfil:', error)
-      return null
-    }
-  }
 
   async function signIn(email: string, password: string) {
     const { error } = await supabase.auth.signInWithPassword({ email, password })

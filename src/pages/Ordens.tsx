@@ -72,7 +72,7 @@ export function Ordens() {
   const handleCreateOrdem = () => {
     createOrdem.mutate({
       ...newOrdem,
-      data_entrega: newOrdem.data_entrega || null,
+      data_entrega: newOrdem.data_entrega || undefined,
       usuario_id: '00000000-0000-0000-0000-000000000000',
       data_pedido: new Date().toISOString()
     }, {
