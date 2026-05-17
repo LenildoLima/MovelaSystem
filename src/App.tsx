@@ -13,6 +13,7 @@ import { Financeiro } from './pages/Financeiro'
 import { Clientes } from './pages/Clientes'
 import { Fornecedores } from './pages/Fornecedores'
 import { Login } from './pages/Login'
+import { Cadastro } from './pages/Cadastro'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,6 +30,7 @@ export default function App() {
         <Router>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/cadastro" element={<Cadastro />} />
             
             <Route path="/*" element={
               <ProtectedRoute>

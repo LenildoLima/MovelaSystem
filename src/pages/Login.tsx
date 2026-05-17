@@ -5,13 +5,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Hammer, Loader2 } from 'lucide-react'
+import { Hammer, Loader2, Eye, EyeOff } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { Link } from 'react-router-dom'
 
 export function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   
   const { signIn } = useAuth()
   const navigate = useNavigate()
@@ -68,14 +70,23 @@ export function Login() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
-              <Input 
-                id="password" 
-                type="password" 
-                required 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="bg-zinc-950 border-zinc-800 focus-visible:ring-amber-500"
-              />
+              <div className="relative">
+                <Input 
+                  id="password" 
+                  type={showPassword ? "text" : "password"}
+                  required 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-zinc-950 border-zinc-800 focus-visible:ring-amber-500 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-300"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <Button 
               type="submit" 
@@ -89,6 +100,15 @@ export function Login() {
                 </>
               ) : 'Entrar'}
             </Button>
+
+            <div className="text-center pt-2">
+              <Link 
+                to="/cadastro" 
+                className="text-xs text-zinc-500 hover:text-amber-500 transition-colors"
+              >
+                Não tem conta? Cadastre-se
+              </Link>
+            </div>
           </form>
         </CardContent>
       </Card>

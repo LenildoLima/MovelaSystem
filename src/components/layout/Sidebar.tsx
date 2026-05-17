@@ -24,7 +24,12 @@ const navItems = [
   { name: 'Fornecedores', path: '/fornecedores', icon: Truck },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+  onClose?: () => void
+  className?: string
+}
+
+export function Sidebar({ onClose, className }: SidebarProps) {
   const { perfil, signOut } = useAuth()
   const navigate = useNavigate()
 
@@ -38,7 +43,7 @@ export function Sidebar() {
   }
 
   return (
-    <div className="flex h-screen w-64 flex-col bg-zinc-950 border-r border-zinc-800 fixed left-0 top-0">
+    <div className={cn("flex h-screen w-64 flex-col bg-zinc-950 border-r border-zinc-800", className)}>
       <div className="flex h-16 items-center px-6 border-b border-zinc-800">
         <Hammer className="h-6 w-6 text-amber-500 mr-2" />
         <span className="text-xl font-bold tracking-tight text-white">MovelaSystem</span>
@@ -49,6 +54,7 @@ export function Sidebar() {
           <NavLink
             key={item.path}
             to={item.path}
+            onClick={onClose}
             className={({ isActive }) =>
               cn(
                 'flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors',
