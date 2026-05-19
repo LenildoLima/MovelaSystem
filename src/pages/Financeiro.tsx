@@ -49,8 +49,7 @@ type Caixa = {
   total_sangrias: number
   diferenca: number | null
   observacoes: string | null
-  observacao_fechamento: string | null
-  criado_em: string
+  aberto_em: string
   fechado_em: string | null
 }
 
@@ -248,7 +247,7 @@ export function Financeiro() {
         total_suprimentos: totalSuprimentos,
         total_sangrias: totalSangrias,
         diferenca,
-        observacao_fechamento: obsFechamento,
+        observacoes: obsFechamento,
         fechado_em: new Date().toISOString()
       }
 
@@ -404,7 +403,7 @@ export function Financeiro() {
                 </div>
                 <div className="flex items-center gap-4 text-sm text-zinc-400 mt-2">
                   <span className="flex items-center gap-1">
-                    <History className="h-4 w-4" /> Aberto em: {formatData(caixaAtivo.criado_em)} às {formatHora(caixaAtivo.criado_em)}
+                    <History className="h-4 w-4" /> Aberto em: {new Date(caixaAtivo.aberto_em).toLocaleDateString('pt-BR')} às {new Date(caixaAtivo.aberto_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                   </span>
                   <span className="flex items-center gap-1">
                     <User className="h-4 w-4" /> Op: {caixaAtivo.usuario_nome}
@@ -553,7 +552,7 @@ export function Financeiro() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-zinc-800 bg-zinc-950">
-                    <TableHead className="text-zinc-400">Data Abertura</TableHead>
+                    <TableHead className="text-zinc-400">Abertura / Fechamento</TableHead>
                     <TableHead className="text-zinc-400">Operador</TableHead>
                     <TableHead className="text-zinc-400 text-right">Abertura</TableHead>
                     <TableHead className="text-zinc-400 text-right">Entradas</TableHead>
@@ -576,8 +575,15 @@ export function Financeiro() {
                       const saldoPrev = h.valor_abertura + h.total_entradas + h.total_suprimentos - h.total_sangrias
                       return (
                         <TableRow key={h.id} className="border-zinc-800">
-                          <TableCell className="font-medium whitespace-nowrap">
-                            {formatData(h.criado_em)} {formatHora(h.criado_em)}
+                          <TableCell className="font-medium whitespace-nowrap space-y-1">
+                            <div className="flex items-center text-emerald-500 text-xs gap-1">
+                              INÍCIO: {new Date(h.aberto_em).toLocaleDateString('pt-BR')} {new Date(h.aberto_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                            {h.fechado_em && (
+                              <div className="flex items-center text-rose-500 text-xs gap-1">
+                                FIM: {new Date(h.fechado_em).toLocaleDateString('pt-BR')} {new Date(h.fechado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                            )}
                           </TableCell>
                           <TableCell className="text-zinc-300">{h.usuario_nome}</TableCell>
                           <TableCell className="text-right text-blue-500">{formatCurrency(h.valor_abertura)}</TableCell>
