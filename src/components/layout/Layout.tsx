@@ -1,7 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import { Topbar } from './Topbar'
 import { Toaster } from '@/components/ui/toaster'
-import { cn } from '@/lib/utils'
 
 interface LayoutProps {
   children?: React.ReactNode

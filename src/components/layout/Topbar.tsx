@@ -10,7 +10,6 @@ import {
   Truck,
   LogOut,
   User,
-  Settings,
   ChevronDown,
   Menu,
   X
