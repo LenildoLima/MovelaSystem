@@ -10,6 +10,7 @@ import { Estoque } from './pages/Estoque'
 import { Produtos } from './pages/Produtos'
 import { Ordens } from './pages/Ordens'
 import { Financeiro } from './pages/Financeiro'
+import { Vendas } from './pages/Vendas'
 import { Clientes } from './pages/Clientes'
 import { Fornecedores } from './pages/Fornecedores'
 import { Login } from './pages/Login'
@@ -49,6 +50,12 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/cadastro" element={<Cadastro />} />
             <Route path="/esqueci-senha" element={<EsqueciSenha />} />
+            
+            <Route path="/vendas" element={
+              <ProtectedRoute>
+                <Vendas />
+              </ProtectedRoute>
+            } />
             
             <Route path="/*" element={
               <ProtectedRoute>

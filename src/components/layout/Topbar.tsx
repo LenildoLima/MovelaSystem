@@ -10,6 +10,7 @@ import {
   Truck,
   LogOut,
   User,
+  ShoppingCart,
   ChevronDown,
   Menu,
   X
@@ -32,7 +33,8 @@ const menuCategories = [
     title: 'Financeiro',
     icon: DollarSign,
     items: [
-      { name: 'Financeiro', path: '/financeiro', icon: DollarSign }
+      { name: 'Caixa', path: '/financeiro', icon: DollarSign },
+      { name: 'Vendas - PDV', path: '/vendas', icon: ShoppingCart }
     ]
   },
   {
