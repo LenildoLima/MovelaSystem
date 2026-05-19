@@ -115,3 +115,13 @@ export interface OrdemMaoObra {
   responsavel: string
   valor: number
 }
+
+export interface SolicitacaoSenha {
+  id: UUID
+  email: string
+  nome: string
+  status: 'pendente' | 'resolvido'
+  criado_em: TIMESTAMPTZ
+  resolvido_em?: TIMESTAMPTZ
+}
+

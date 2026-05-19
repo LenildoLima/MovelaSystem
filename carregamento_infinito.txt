@@ -1,3 +1,66 @@
+# Loading Infinito no Reload — Supabase Auth + React
+
+## O Problema
+
+Ao recarregar a página (F5) com usuário logado, o sistema ficava preso
+na tela de "Carregando..." infinitamente. Às vezes redirecionava para
+o login sem motivo mesmo com sessão ativa.
+
+Comportamento:
+- Login funcionava normalmente (primeira carga ok)
+- Reload travava no loading
+- Às vezes redirecionava pro login perdendo a sessão
+
+## A Causa (Identificada pelo Grok)
+
+Deadlock / race condition entre getSession() e onAuthStateChange do Supabase.
+
+O Supabase tem um comportamento delicado: se você chamar qualquer método
+async do Supabase (getSession, getUser, refreshSession, etc.) dentro do
+callback do onAuthStateChange usando await, você causa um deadlock — a
+próxima chamada fica pendurada para sempre.
+
+Isso explica:
+- Login funciona (primeira carga, sem conflito)
+- Reload trava (onAuthStateChange + getSession em conflito)
+- Às vezes redireciona pro login (timeout ou estado errado)
+
+## Tentativas que NÃO funcionaram
+
+1. Usar apenas onAuthStateChange — não dispara no reload
+2. Usar apenas getSession — trava e nunca resolve o .then()
+3. Combinar getSession + onAuthStateChange com await dentro — deadlock
+4. Adicionar timeout de 3 segundos — resolve o loading mas perde a sessão
+5. Usar flag "mounted" — não resolve o deadlock
+
+## A Solução Definitiva (Padrão 2026)
+
+Duas mudanças essenciais:
+
+### 1. AuthContext.tsx — Regras obrigatórias
+
+- getSession() apenas UMA VEZ na inicialização, fora do onAuthStateChange
+- NUNCA usar await dentro do callback do onAuthStateChange
+- Usar setTimeout(..., 0) para chamar funções async dentro do onAuthStateChange
+- setLoading(false) chamado dentro do getSession().then(), não dentro do onAuthStateChange
+
+### 2. main.tsx — Remover StrictMode
+
+O React StrictMode causa double mount em desenvolvimento e piora
+problemas de autenticação com o Supabase.
+
+Trocar:
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  )
+
+Por:
+  root.render(<App />)
+
+## Código Correto do AuthContext.tsx
+
 import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
@@ -42,17 +105,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
+    // getSession apenas uma vez na inicialização
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setUser(session?.user ?? null)
       loadUserProfile(session?.user ?? null)
-      setLoading(false)
+      setLoading(false) // crucial — sempre chama aqui
     })
 
+    // onAuthStateChange — NUNCA usar await diretamente aqui
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       setSession(currentSession)
       setUser(currentSession?.user ?? null)
       if (currentSession?.user) {
+        // setTimeout evita o deadlock com o Supabase
         setTimeout(() => {
           loadUserProfile(currentSession.user)
         }, 0)
@@ -104,3 +170,16 @@ export function useAuth() {
   }
   return context
 }
+
+## Resumo da Solução em 3 Regras
+
+1. getSession() fora e antes do onAuthStateChange, com setLoading(false) no .then()
+2. Nunca usar await dentro do callback do onAuthStateChange — usar setTimeout(..., 0)
+3. Remover React StrictMode do main.tsx
+
+## Stack onde foi resolvido
+
+- React 18 + TypeScript + Vite
+- @supabase/supabase-js
+- React Router DOM v6
+- Supabase Auth com tabela customizada de perfil (usuarios)

@@ -15,6 +15,8 @@ export function Login() {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   
+  const [errorMsg, setErrorMsg] = useState('')
+  
   const { signIn } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -25,18 +27,23 @@ export function Login() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setErrorMsg('')
     
     try {
       await signIn(email, password)
       navigate(from, { replace: true })
     } catch (error: any) {
-      toast({
-        title: 'Erro na autenticação',
-        description: error.message === 'Invalid login credentials' 
-          ? 'Email ou senha incorretos.' 
-          : 'Ocorreu um erro ao tentar entrar.',
-        variant: 'destructive'
-      })
+      if (error.message === 'Sua conta ainda não foi ativada. Aguarde a aprovação do administrador.') {
+        setErrorMsg(error.message)
+      } else {
+        toast({
+          title: 'Erro na autenticação',
+          description: error.message === 'Invalid login credentials' 
+            ? 'Email ou senha incorretos.' 
+            : 'Ocorreu um erro ao tentar entrar.',
+          variant: 'destructive'
+        })
+      }
     } finally {
       setLoading(false)
     }
@@ -88,20 +95,37 @@ export function Login() {
                 </button>
               </div>
             </div>
-            <Button 
-              type="submit" 
-              className="w-full bg-amber-500 hover:bg-amber-600 font-bold" 
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Entrando...
-                </>
-              ) : 'Entrar'}
-            </Button>
+            <div className="space-y-3">
+              <Button 
+                type="submit" 
+                className="w-full bg-amber-500 hover:bg-amber-600 font-bold" 
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Entrando...
+                  </>
+                ) : 'Entrar'}
+              </Button>
 
-            <div className="text-center pt-2">
+              {errorMsg && (
+                <p className="text-sm text-red-500 text-center font-medium animate-in fade-in slide-in-from-top-1">
+                  {errorMsg}
+                </p>
+              )}
+
+              <div className="text-center">
+                <Link 
+                  to="/esqueci-senha" 
+                  className="text-xs text-zinc-400 hover:text-amber-500 transition-colors"
+                >
+                  Esqueci minha senha
+                </Link>
+              </div>
+            </div>
+
+            <div className="text-center pt-2 border-t border-zinc-800 mt-4">
               <Link 
                 to="/cadastro" 
                 className="text-xs text-zinc-500 hover:text-amber-500 transition-colors"

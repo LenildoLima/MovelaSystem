@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Hammer, Loader2, Eye, EyeOff } from 'lucide-react'
+import { Hammer, Loader2, Eye, EyeOff, Clock } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
 export function Cadastro() {
@@ -16,6 +16,7 @@ export function Cadastro() {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
   
   const navigate = useNavigate()
   const { toast } = useToast()
@@ -66,11 +67,7 @@ export function Cadastro() {
         }
       }
 
-      toast({
-        title: 'Conta criada!',
-        description: 'Aguarde a aprovação do administrador.',
-      })
-      navigate('/login')
+      setIsSuccess(true)
     } catch (error: any) {
       toast({
         title: 'Erro no cadastro',
@@ -80,6 +77,33 @@ export function Cadastro() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (isSuccess) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-zinc-950 p-4">
+        <Card className="w-full max-w-md bg-zinc-900 border-zinc-800 text-white shadow-2xl">
+          <CardHeader className="space-y-4 flex flex-col items-center pt-8">
+            <div className="bg-amber-500/10 p-3 rounded-full mb-2">
+              <Hammer className="h-10 w-10 text-amber-500" />
+            </div>
+            <Clock className="h-16 w-16 text-amber-500 mb-4" />
+            <CardTitle className="text-2xl font-bold tracking-tight text-center text-white">Cadastro Realizado!</CardTitle>
+            <CardDescription className="text-zinc-400 text-center text-base">
+              Seu cadastro foi criado com sucesso! Aguarde a ativação da sua conta pelo administrador do sistema. Você receberá as instruções de acesso em breve.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center pb-8">
+            <Button 
+              onClick={() => navigate('/login')}
+              className="bg-amber-500 hover:bg-amber-600 font-bold"
+            >
+              Voltar ao Login
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (

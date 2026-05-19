@@ -14,6 +14,11 @@ import { Clientes } from './pages/Clientes'
 import { Fornecedores } from './pages/Fornecedores'
 import { Login } from './pages/Login'
 import { Cadastro } from './pages/Cadastro'
+import { EsqueciSenha } from './pages/EsqueciSenha'
+import { Usuarios } from './pages/Usuarios'
+import { Perfil } from './pages/Perfil'
+import { Navigate } from 'react-router-dom'
+import { useAuth } from './hooks/use-auth'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,6 +28,18 @@ const queryClient = new QueryClient({
   },
 })
 
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { perfil, loading } = useAuth()
+  
+  if (loading) return null
+  
+  if (perfil?.role !== 'admin') {
+    return <Navigate to="/" replace />
+  }
+  
+  return <>{children}</>
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -31,6 +48,7 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/cadastro" element={<Cadastro />} />
+            <Route path="/esqueci-senha" element={<EsqueciSenha />} />
             
             <Route path="/*" element={
               <ProtectedRoute>
@@ -43,6 +61,12 @@ export default function App() {
                     <Route path="/financeiro" element={<Financeiro />} />
                     <Route path="/clientes" element={<Clientes />} />
                     <Route path="/fornecedores" element={<Fornecedores />} />
+                    <Route path="/usuarios" element={
+                      <AdminRoute>
+                        <Usuarios />
+                      </AdminRoute>
+                    } />
+                    <Route path="/perfil" element={<Perfil />} />
                   </Routes>
                 </Layout>
               </ProtectedRoute>
